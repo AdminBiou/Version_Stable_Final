@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: serveur_quarkus_java
+      MYSQL_USER: quarkus
+      MYSQL_PASSWORD: quarkus
+      MYSQL_ROOT_PASSWORD: 14Avril2004
+    ports:
+      - "3308:3306"  # accès local à MySQL
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p14Avril2004"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  backend:
+    image: mobioquark4/quarkus-backend:1.0
+    container_name: backend
+    ports:
+      - "8081:8080"  # exposer backend sur localhost:8081
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:mysql://db:3306/serveur_quarkus_java
+      QUARKUS_DATASOURCE_USERNAME: quarkus
+      QUARKUS_DATASOURCE_PASSWORD: quarkus
+      QUARKUS_HTTP_HOST: 0.0.0.0
+      QUARKUS_HTTP_PORT: 8080
+
+  frontend:
+    image: mobioquark4/quarkus-frontend:1.0
+    container_name: frontend
+    ports:
+      - "8080:8080"  # accès frontend depuis localhost:8080
+    depends_on:
+      - backend
+    environment:
+      BACKEND_URL: http://backend:8080  # communication backend/frontend via Docker
+
+volumes:
+  db_data:

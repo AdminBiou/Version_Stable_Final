@@ -1,0 +1,11 @@
+FROM eclipse-temurin:21-jre-jammy AS runtime
+
+WORKDIR /app
+
+COPY serveur-quarkus-java-1.0.0-SNAPSHOT-runner.jar app.jar
+
+EXPOSE 8080
+
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75"
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
